@@ -13,6 +13,7 @@ Multigraph Plugin - Graph Structure
    - asterisk_calls
    - asterisk_channels
    - asterisk_peers_sip
+   - asterisk_peers_pjsip
    - asterisk_peers_iax2
    - asterisk_voip_codecs
    - asterisk_conferences
@@ -168,6 +169,16 @@ class MuninAsteriskPlugin(MuninPlugin):
                           'lagged', 'unknown'):
                 graph.addField(field, field, type='GAUGE', draw='AREASTACK')
             self.appendGraph('asterisk_peers_sip', graph)
+
+        if (self.graphEnabled('asterisk_peers_pjsip')
+            and self._ami.hasChannelType('pjsip')):
+            graph = MuninGraph('Asterisk - VoIP Peers - PJSIP', self._category,
+                info='Asterisk - Information on PJSIP VoIP Peers.',
+                args='--base 1000 --lower-limit 0')
+            for field in ('online', 'unmonitored', 'unreachable',
+                          'lagged', 'unknown'):
+                graph.addField(field, field, type='GAUGE', draw='AREASTACK')
+            self.appendGraph('asterisk_peers_pjsip', graph)
 
         if (self.graphEnabled('asterisk_peers_iax2') 
             and self._ami.hasChannelType('iax2')):
@@ -329,6 +340,14 @@ class MuninAsteriskPlugin(MuninPlugin):
                 for field in ('online', 'unmonitored', 'unreachable', 
                               'lagged', 'unknown'):
                     self.setGraphVal('asterisk_peers_sip', 
+                                     field, stats.get(field))
+
+        if self.hasGraph('asterisk_peers_pjsip'):
+            stats = self._ami.getPeerStats('pjsip')
+            if stats:
+                for field in ('online', 'unmonitored', 'unreachable',
+                              'lagged', 'unknown'):
+                    self.setGraphVal('asterisk_peers_pjsip',
                                      field, stats.get(field))
         
         if self.hasGraph('asterisk_peers_iax2'):

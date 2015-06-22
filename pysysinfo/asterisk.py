@@ -480,6 +480,8 @@ class AsteriskInfo:
             cmd = "iax2 show peers"
         elif chan == 'sip':
             cmd = "sip show peers"
+        elif chan == 'pjsip':
+            return self.getPjsipPeerStats()
         else:
             raise AttributeError("Invalid channel type in query for Peer Stats.")
         cmdresp = self.executeCommand(cmd)
@@ -497,6 +499,28 @@ class AsteriskInfo:
                     info_dict[mobj.group(1).lower()] += 1
                 
         return info_dict
+
+    def getPjsipPeerStats(self):
+        cmdresp = self.executeCommand("pjsip show endpoints")
+        info_dict = {
+            'Unknown': 0,
+            'Not in use': 0,
+            'In use': 0,
+            'Busy': 0,
+            'Invalid': 0,
+            'Unavailable': 0,
+            'Ringing': 0,
+            'Ring+Inuse': 0,
+            'On Hold': 0
+        }
+
+        for line in cmdresp.splitlines():
+            epmatch = re.search('Endpoint:\s+(\d+)\s+(Unknown|Not in use|In use|Busy|Invalid|Unavailable|Ringing|Ring\+Inuse|On Hold)', line)
+            if epmatch:
+                info_dict[epmatch.group(2)] += 1
+
+        return info_dict
+
 
     def getVoIPchanStats(self, chantype, 
                          codec_list=('ulaw', 'alaw', 'gsm', 'g729')):
